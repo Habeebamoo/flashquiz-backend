@@ -13,7 +13,7 @@ func main() {
 	router := http.NewServeMux()
 	router.HandleFunc("/api/hello", user.Welcome)
 
-	handler := middlewares.CORS(router)
+	handler := middlewares.CORS(middlewares.Recovery(router))
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
