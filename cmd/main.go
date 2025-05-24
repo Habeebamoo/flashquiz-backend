@@ -5,6 +5,7 @@ import (
 	"flashquiz-server/internal/middlewares"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -14,8 +15,13 @@ func main() {
 
 	handler := middlewares.CORS(router)
 
-	srv := http.Server{
-		Addr: ":8080",
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "8080"
+	}
+
+	srv := &http.Server{
+		Addr: ":"+PORT,
 		Handler: handler,
 		ReadTimeout: 5*time.Second,
 		WriteTimeout: 10*time.Second,
