@@ -4,14 +4,21 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 var DB *sql.DB
 
 func InitDB() error {
 	var err error
+
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("No .env file, ok in prod")
+	}
 	// Still in development
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=enable", "test", "test", "test", "test")
+	connStr := os.Getenv("DATABASE_URL")
 
 	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
