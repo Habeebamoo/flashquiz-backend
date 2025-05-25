@@ -1,8 +1,9 @@
 package main
 
 import (
-	"flashquiz-server/internal/handlers/user"
 	"flashquiz-server/internal/middlewares"
+	"flashquiz-server/internal/user"
+	"flashquiz-server/pkg/db"
 	"log"
 	"net/http"
 	"os"
@@ -10,8 +11,10 @@ import (
 )
 
 func main() {
+	db.InitDB()
+
 	router := http.NewServeMux()
-	router.HandleFunc("/api/hello", user.Welcome)
+	router.HandleFunc("/api/", user.Welcome)
 
 	handler := middlewares.CORS(middlewares.Recovery(router))
 
