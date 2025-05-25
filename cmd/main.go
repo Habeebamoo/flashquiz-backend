@@ -15,7 +15,7 @@ import (
 func main() {
 	err := db.InitDB()
 	if err != nil {
-		log.Println("Connected to Postgres")
+		log.Fatal(err)
 	}
 
 	router := http.NewServeMux()
@@ -38,6 +38,7 @@ func main() {
 		IdleTimeout: 15*time.Second,
 	}
 
+	log.Println("Connected to Postgres")
 	log.Println("Server running on port 8080")
 	log.Fatal(srv.ListenAndServe())
 }
