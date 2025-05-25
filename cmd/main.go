@@ -8,13 +8,20 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	db.InitDB()
+	err := db.InitDB()
+	if err != nil {
+		log.Println("Connected to Postgres")
+	}
 
 	router := http.NewServeMux()
+
 	router.HandleFunc("/api/", user.Welcome)
+	router.HandleFunc("/api/register", user.Register)
 
 	handler := middlewares.CORS(middlewares.Recovery(router))
 
