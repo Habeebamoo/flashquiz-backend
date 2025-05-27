@@ -40,6 +40,6 @@ func main() {
 	}
 
 	log.Println("Connected to Postgres")
-	log.Println("Server running on port 8080")
+	log.Printf("Server running on port %s\n", PORT)
 	log.Fatal(srv.ListenAndServe())
 }

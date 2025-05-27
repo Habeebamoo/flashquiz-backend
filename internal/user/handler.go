@@ -37,7 +37,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	var userExists bool
 	if err := db.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -48,13 +48,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := Hash(u.Password)
 	if err != nil {
-		http.Error(w, "Internal Server Error (hashing password)", http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return		
 	}
 
 	_, err = db.DB.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", u.Name, u.Email, hashedPassword)
 	if err != nil {
-		http.Error(w, "Internal Server Error (inserting database)", http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return		
 	}
 
