@@ -24,7 +24,6 @@ func InitDB() error {
 	if err != nil {
 		return errors.New("failed to initialize database connection")
 	}
-	defer DB.Close()
 
 	// Check the connection status
 	if err := DB.Ping(); err != nil {

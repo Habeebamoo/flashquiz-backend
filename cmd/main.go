@@ -17,6 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.DB.Close()
 
 	router := http.NewServeMux()
 
