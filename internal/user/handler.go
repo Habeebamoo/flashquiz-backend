@@ -29,6 +29,12 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = u.Validate()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	var userExists bool
 	if err := db.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

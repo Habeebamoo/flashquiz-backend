@@ -31,7 +31,9 @@ func InitDB() error {
 		return errors.New("failed to connect to database")
 	}
 
-	initTables(DB)
+	if err := initTables(DB); err != nil {
+		return err
+	}
 
 	return nil
 }

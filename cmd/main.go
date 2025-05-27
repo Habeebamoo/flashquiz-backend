@@ -20,7 +20,7 @@ func main() {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("/api/", user.Welcome)
+	router.HandleFunc("/api", user.Welcome)
 	router.HandleFunc("/api/register", user.Register)
 
 	handler := middlewares.CORS(middlewares.Recovery(router))
