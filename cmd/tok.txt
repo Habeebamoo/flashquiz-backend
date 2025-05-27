@@ -1,1 +1,0 @@
-postgresql://flashquiz_database_user:WD1oJvVovgye4P06JQkSL8cSNzbomXly@dpg-d0p04reuk2gs7395m3eg-a.singapore-postgres.render.com/flashquiz_database
