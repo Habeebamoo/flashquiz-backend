@@ -32,7 +32,7 @@ func GenerateJWT(id int) (string, error) {
 	}
 
 	if err := godotenv.Load(); err != nil {
-		return "", err
+		return ".env failure", err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

@@ -108,7 +108,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	token, err := GenerateJWT(user.Id)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		ErrorResponse(w, "Failed to generate jwt")
 		return
 	}
