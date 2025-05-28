@@ -93,10 +93,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", u.Email).Scan(&user.Id, &user.Password); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		if err == sql.ErrNoRows {
-			ErrorResponse(w, "User dosen't exist")
+			ErrorResponse(w, "Invalid Credentials")
 			return
 		}
-		ErrorResponse(w, "Failed to check user")
+		ErrorResponse(w, "Internal Server Error")
 		return
 	}
 
