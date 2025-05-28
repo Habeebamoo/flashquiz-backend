@@ -26,12 +26,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		http.Error(w, "Invalid JSON Format", http.StatusBadRequest)
+		ErrorResponse(w, "Invalid JSON Format")
 		return
 	}
 
 	err = u.Validate()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		ErrorResponse(w, "name, email & password must be provided")
 		return
 	}
 
@@ -43,6 +45,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	if userExists {
 		http.Error(w, "User already exists, Try logging in", http.StatusNotAcceptable)
+		ErrorResponse(w, "User already exists, Try logging in")
 		return
 	}
 

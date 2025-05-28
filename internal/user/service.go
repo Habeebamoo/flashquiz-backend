@@ -1,7 +1,9 @@
 package user
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,4 +22,10 @@ func (user User) Validate() error {
 	} else {
 		return nil
 	}
+}
+
+func ErrorResponse(w http.ResponseWriter, msg string) {
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": msg,
+	})
 }
