@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -15,7 +15,7 @@ func InitDB() error {
 	var err error
 
 	if err := godotenv.Load(); err != nil {
-		fmt.Println("No .env file, ok in prod")
+		log.Println("No .env file, ok in prod")
 	}
 
 	connStr := os.Getenv("DATABASE_URL")

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -28,6 +29,10 @@ func GenerateJWT(id int) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": id,
 		"exp": time.Now().Add(24*time.Hour).Unix(),
+	}
+
+	if err := godotenv.Load(); err != nil {
+		return "", err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
