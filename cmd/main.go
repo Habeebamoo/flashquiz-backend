@@ -23,6 +23,7 @@ func main() {
 
 	router.HandleFunc("/api", user.Welcome)
 	router.HandleFunc("/api/register", user.Register)
+	router.HandleFunc("/api/login", user.Login)
 
 	handler := middlewares.CORS(middlewares.Recovery(router))
 

@@ -66,3 +66,52 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		"message": "user registered successfully",
 	})
 }
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var u User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		http.Error(w, "Invalid JSON Format", http.StatusBadRequest)
+		ErrorResponse(w, "Invalid JSON Format")
+		return
+	}
+
+	if err := u.LoginValidate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		ErrorResponse(w, "email & password must be provided")
+		return
+	}
+
+	var user User
+	if err := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", u.Email).Scan(&user.Id, &user.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	err = Verify(user.Password, u.Password)
+	if err != nil {
+		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		ErrorResponse(w, "Invalid Crendentials")
+		return
+	}
+
+	token, err := GenerateJWT(user.Id)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"token": token,
+		"message": "Login Successful",
+	})
+}

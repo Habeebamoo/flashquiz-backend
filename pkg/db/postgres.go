@@ -17,7 +17,7 @@ func InitDB() error {
 	if err := godotenv.Load(); err != nil {
 		fmt.Println("No .env file, ok in prod")
 	}
-	// Still in development
+
 	connStr := os.Getenv("DATABASE_URL")
 
 	DB, err = sql.Open("postgres", connStr)
