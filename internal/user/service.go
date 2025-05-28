@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -32,7 +33,7 @@ func GenerateJWT(id int) (string, error) {
 	}
 
 	if err := godotenv.Load(); err != nil {
-		return ".env failure", err
+		log.Println("no .env file, ok in prod")
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
