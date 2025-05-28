@@ -1,6 +1,7 @@
 package user
 
 import (
+	"database/sql"
 	"encoding/json"
 	"flashquiz-server/pkg/db"
 	"fmt"
@@ -90,7 +91,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var user User
 	if err := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", u.Email).Scan(&user.Id, &user.Password); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		ErrorResponse(w, "Internal Server Error")
+		if err == sql.ErrNoRows {
+			ErrorResponse(w, "User dosen't exist")
+			return
+		}
+		ErrorResponse(w, "Failed to check user")
 		return
 	}
 
@@ -104,7 +109,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	token, err := GenerateJWT(user.Id)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		ErrorResponse(w, "Internal Server Error")
+		ErrorResponse(w, "Failed to generate jwt")
 		return
 	}
 
