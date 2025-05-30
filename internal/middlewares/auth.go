@@ -16,7 +16,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(w, "Authorization Header Missing", http.StatusUnauthorized)
@@ -31,7 +31,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		tokenStr := parts[1]
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-			if _ , ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
 			}
 			return []byte(os.Getenv("JWT_KEY")), nil
