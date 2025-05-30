@@ -24,8 +24,9 @@ func main() {
 	router.HandleFunc("/api", user.Welcome)
 	router.HandleFunc("/api/register", user.Register)
 	router.HandleFunc("/api/login", user.Login)
+	router.HandleFunc("/api/user", user.UserHandler)
 
-	handler := middlewares.CORS(middlewares.Recovery(router))
+	handler := middlewares.CORS(middlewares.Recovery(middlewares.AuthMiddleware(router)))
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
