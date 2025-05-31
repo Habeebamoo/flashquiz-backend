@@ -2,8 +2,12 @@ package middlewares
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
+	"os"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -27,7 +31,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		tokenStrings := strings.TrimPrefix(authHeader, "Bearer")
 		tokenStr := strings.TrimSpace(tokenStrings)
 
-		/*token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
 			}
@@ -49,9 +53,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if !ok {
 			http.Error(w, "Invalid user id in token", http.StatusUnauthorized)
 			return
-		}*/
+		}
 
-		ctx := context.WithValue(r.Context(), "userID", tokenStr)
+		ctx := context.WithValue(r.Context(), "userID", userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
