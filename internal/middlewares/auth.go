@@ -19,13 +19,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[1] == "" {
-			http.Error(w, "Invalid Authorization Header Format", http.StatusUnauthorized)
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			http.Error(w, "Invalid Authoriation Format", http.StatusUnauthorized)
 			return
 		}
 
-		tokenStr := parts[1]
+		tokenStrings := strings.TrimPrefix(authHeader, "Bearer")
+		tokenStr := strings.TrimSpace(tokenStrings)
+
 		/*token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
