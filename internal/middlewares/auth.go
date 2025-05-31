@@ -10,6 +10,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type contextKey string
+var userIdKey contextKey = "userID"
+
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
 		if r.URL.Path == "/api/login" || r.URL.Path == "/api/register" {
@@ -55,7 +58,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userID", userId)
+		ctx := context.WithValue(r.Context(), userIdKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

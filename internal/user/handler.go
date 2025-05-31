@@ -128,7 +128,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, ok := r.Context().Value("userID").(string)
+	userId, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
 		return
