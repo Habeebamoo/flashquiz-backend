@@ -148,6 +148,6 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	})*/
 
 	json.NewEncoder(w).Encode(map[string]string{
-		"test": userID
+		"test": userId,
 	})
 }
