@@ -132,13 +132,15 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(middlewares.UserIdKey).(int)
 	if !ok {
 		http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
+		ErrorResponse(w, "Unauthorized Access")
 		return
 	}
 
 	var user User
 	err := db.DB.QueryRow("SELECT id, name, email, isVerified FROM users WHERE id = $1", userId).Scan(&user.Id, &user.Name, &user.Email, &user.IsVerified)
 	if err != nil {
-		http.Error(w, "testing: query error", http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
 		return
 	}
 
