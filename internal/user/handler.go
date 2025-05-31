@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"encoding/json"
+	"flashquiz-server/internal/middlewares"
 	"flashquiz-server/pkg/db"
 	"fmt"
 	"net/http"
@@ -128,7 +129,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, ok := r.Context().Value("userID").(int)
+	userId, ok := r.Context().Value(middlewares.UserIdKey).(int)
 	if !ok {
 		http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
 		return
