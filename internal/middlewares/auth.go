@@ -49,7 +49,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		userId, ok := claims["userId"].(string)
+		userId, ok := claims["userId"].(int)
 		if !ok {
 			http.Error(w, "Invalid user id in token", http.StatusUnauthorized)
 			return
