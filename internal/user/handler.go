@@ -75,7 +75,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "user registered successfully",
+		"message": "User registered successfully",
 	})
 }
 
@@ -96,7 +96,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if err := u.LoginValidate(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		ErrorResponse(w, "email and password must be provided")
+		ErrorResponse(w, "Email and password must be provided")
 		return
 	}
 
@@ -104,7 +104,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", u.Email).Scan(&user.Id, &user.Password); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if err == sql.ErrNoRows {
-			ErrorResponse(w, "Invalid Credentials")
+			ErrorResponse(w, "User not found")
 			return
 		}
 		ErrorResponse(w, "Internal Server Error")
