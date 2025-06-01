@@ -9,12 +9,13 @@ import (
 )
 
 func Welcome(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != "GET" {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		ErrorResponse(w, "Method Not Allowed")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "This is FlashQuiz Server",
@@ -22,47 +23,52 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != "POST" {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		ErrorResponse(w, "Method Not Allowed")
 		return
 	}
 
 	var u User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
-		http.Error(w, "Invalid JSON Format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse(w, "Invalid JSON Format")
 		return
 	}
 
 	err = u.Validate()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		ErrorResponse(w, "name, email & password must be provided")
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse(w, err.Error())
 		return
 	}
 
 	var userExists bool
 	if err := db.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
 		return
 	}
 
 	if userExists {
-		http.Error(w, "User already exists, Try logging in", http.StatusConflict)
+		w.WriteHeader(http.StatusConflict)
 		ErrorResponse(w, "User already exists, Try logging in")
 		return
 	}
 
 	hashedPassword, err := Hash(u.Password)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
 		return		
 	}
 
 	_, err = db.DB.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", u.Name, u.Email, hashedPassword)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
 		return		
 	}
 
@@ -75,27 +81,28 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		ErrorResponse(w, "Method Not Allowed")
 		return
 	}
 
 	var u User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
-		http.Error(w, "Invalid JSON Format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse(w, "Invalid JSON Format")
 		return
 	}
 
 	if err := u.LoginValidate(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		ErrorResponse(w, "email & password must be provided")
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse(w, "email and password must be provided")
 		return
 	}
 
 	var user User
 	if err := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", u.Email).Scan(&user.Id, &user.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		if err == sql.ErrNoRows {
 			ErrorResponse(w, "Invalid Credentials")
 			return
@@ -106,14 +113,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	err = Verify(user.Password, u.Password)
 	if err != nil {
-		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
 		ErrorResponse(w, "Invalid Crendentials")
 		return
 	}
 
 	token, err := GenerateJWT(user.Id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Failed to generate jwt")
 		return
 	}
@@ -128,13 +135,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		http.Error(w, "Method Not Alloweed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		ErrorResponse(w, "Method Not Allowed")
 		return
 	}
 
 	userId, ok := r.Context().Value(middlewares.UserIdKey).(int)
 	if !ok {
-		http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
 		ErrorResponse(w, "Unauthorized Access")
 		return
 	}
@@ -142,7 +150,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err := db.DB.QueryRow("SELECT id, name, email, isVerified FROM users WHERE id = $1", userId).Scan(&user.Id, &user.Name, &user.Email, &user.IsVerified)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
 		return
 	}
