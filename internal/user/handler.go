@@ -49,14 +49,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userExists {
-		http.Error(w, "User already exists, Try logging in", http.StatusNotAcceptable)
-		//ErrorResponse(w, "User already exists, Try logging in")
-		json.NewEncoder(w).Encode(map[string]any{
-			"error": "user already exists",
-			"method": r.Method,
-			"accept": r.Header.Get("Accept"),
-			"headers": r.Header,
-		})
+		http.Error(w, "User already exists, Try logging in", http.StatusConflict)
+		ErrorResponse(w, "User already exists, Try logging in")
 		return
 	}
 
@@ -74,11 +68,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	json.NewEncoder(w).Encode(map[string]string{
 		"message": "user registered successfully",
-		"method": r.Method,
-		"accept": r.Header.Get("Accept"),
-		"headers": r.Header,
 	})
 }
 
