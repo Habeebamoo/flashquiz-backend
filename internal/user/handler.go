@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flashquiz-server/internal/middlewares"
 	"flashquiz-server/pkg/db"
-	"fmt"
 	"net/http"
 )
 
@@ -15,7 +14,11 @@ func Welcome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Hello from FlashQuiz Backend Server")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "This is FlashQuiz Server",
+	})
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -65,8 +68,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]any{
 		"message": "user registered successfully",
+		"method": r.Method,
+		"accept": r.Header.Get("Accept"),
+		"headers": r.Header,
 	})
 }
 
