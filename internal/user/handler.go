@@ -148,7 +148,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user UserResponse
-	err := db.DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
+	err := db.DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE user_id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
