@@ -26,7 +26,7 @@ func Verify(hashedPassword, password string) error {
 	return nil
 }
 
-func GenerateJWT(id int) (string, error) {
+func GenerateJWT(id string) (string, error) {
 	claims := jwt.MapClaims{
 		"userId": id,
 		"exp": time.Now().Add(24*time.Hour).Unix(),

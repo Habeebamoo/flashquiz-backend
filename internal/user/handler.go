@@ -101,7 +101,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	if err := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", u.Email).Scan(&user.Id, &user.Password); err != nil {
+	if err := db.DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if err == sql.ErrNoRows {
 			ErrorResponse(w, "User not found")
@@ -118,7 +118,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := GenerateJWT(user.Id)
+	token, err := GenerateJWT(user.UserId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Failed to generate jwt")
@@ -140,15 +140,15 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, ok := r.Context().Value(middlewares.UserIdKey).(int)
+	userId, ok := r.Context().Value(middlewares.UserIdKey).(string)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		ErrorResponse(w, "Unauthorized Access")
 		return
 	}
 
-	var user User
-	err := db.DB.QueryRow("SELECT id, name, email, isVerified FROM users WHERE id = $1", userId).Scan(&user.Id, &user.Name, &user.Email, &user.IsVerified)
+	var user UserResponse
+	err := db.DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -157,7 +157,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]User{
+	json.NewEncoder(w).Encode(map[string]UserResponse{
 		"data": user,
 	})
 }

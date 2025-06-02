@@ -52,13 +52,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		userIdFloat, ok := claims["userId"].(float64)
+		userId, ok := claims["userId"].(string)
 		if !ok {
 			http.Error(w, "Invalid user id in token", http.StatusUnauthorized)
 			return
 		}
-
-		userId := int(userIdFloat)
 
 		ctx := context.WithValue(r.Context(), UserIdKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
