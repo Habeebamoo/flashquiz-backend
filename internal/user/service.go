@@ -87,7 +87,7 @@ func SendVerification(userEmail, userName string) error {
 
 				<p>To complete your registration and activate your account, please confirm your email address by clicking the button below:</p>
 
-				<p><a href="%s" style="color: white; background-color: #1a73e8; padding: 20px; display: block;">Verify My Email</a></p>
+				<p><a href="%s" style="color: white; background-color: #1a73e8; padding: 20px; display: block; text-align: center; font-weight: bold; font-size: 1.2em;">Verify My Email</a></p>
 
 				<p>This verification grants you access to all our website features and quizzes, it also helps us secure your account and ensure only you have access to it.</p>
 
