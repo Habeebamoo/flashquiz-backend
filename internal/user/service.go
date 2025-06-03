@@ -103,6 +103,10 @@ func SendVerification(userEmail, userName string) error {
 
 	m.SetBody("text/html", body)
 
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file, ok in prod")
+	}
+
 	d := gomail.NewDialer("smtp.gmail.com", 465, "habeebamoo08@gmail.com", os.Getenv("APP_PASSWORD"))
 	d.SSL = true
 
