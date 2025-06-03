@@ -72,13 +72,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return		
 	}
 
-	go func() {
-		err := SendVerification(u.Email, u.Name)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			ErrorResponse(w, "Internal Server Error")
-		}
-	}()
+	err = SendVerification(u.Email, u.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
