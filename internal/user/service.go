@@ -73,7 +73,7 @@ func ErrorResponse(w http.ResponseWriter, msg string) {
 func SendVerification(userEmail, userName string) error {
 	m := gomail.NewMessage()
 
-	m.SetHeader("From", "habeebamoo08@gmail.com")
+	m.SetHeader("From", "flashquizweb@gmail.com")
 	m.SetHeader("To", userEmail)
 	m.SetHeader("Subject", "Verify your FlashQuiz account.")
 
@@ -107,7 +107,7 @@ func SendVerification(userEmail, userName string) error {
 		log.Println("no .env file, ok in prod")
 	}
 
-	d := gomail.NewDialer("smtp.gmail.com", 465, "habeebamoo08@gmail.com", os.Getenv("APP_PASSWORD"))
+	d := gomail.NewDialer("smtp.gmail.com", 465, "flashquizweb@gmail.com", os.Getenv("APP_PASSWORD"))
 	d.SSL = true
 
 	if err := d.DialAndSend(m); err != nil {
