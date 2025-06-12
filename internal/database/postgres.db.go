@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 
 var DB *sql.DB
 
-func InitDB() error {
+func Initialize() error {
 	var err error
 
 	if err := godotenv.Load(); err != nil {

@@ -1,11 +1,19 @@
-package user
+package handlers
 
 import (
 	"database/sql"
 	"encoding/json"
+	"flashquiz-server/internal/database"
 	"flashquiz-server/internal/middlewares"
-	"flashquiz-server/pkg/db"
+	"flashquiz-server/internal/models"
+	"flashquiz-server/internal/service"
 	"net/http"
+)
+
+var (
+	ErrorResponse = service.ErrorResponse
+	Hash = service.Hash
+	DB = database.DB
 )
 
 func Welcome(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +38,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var u User
+	var u models.User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -46,7 +54,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userExists bool
-	if err := db.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
+	if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
 		return
@@ -65,14 +73,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return		
 	}
 
-	_, err = db.DB.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", u.Name, u.Email, hashedPassword)
+	_, err = DB.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", u.Name, u.Email, hashedPassword)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
 		return		
 	}
 
-	go SendVerification(u.Email, u.Name)
+	go service.SendVerification(u.Email, u.Name)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
@@ -88,7 +96,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var u User
+	var u models.User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -102,8 +110,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user User
-	if err := db.DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
+	var user models.User
+	if err := DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if err == sql.ErrNoRows {
 			ErrorResponse(w, "User not found")
@@ -113,14 +121,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = Verify(user.Password, u.Password)
+	err = service.Verify(user.Password, u.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		ErrorResponse(w, "Invalid Crendentials")
 		return
 	}
 
-	token, err := GenerateJWT(user.UserId)
+	token, err := service.GenerateJWT(user.UserId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Failed to generate jwt")
@@ -149,8 +157,8 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user UserResponse
-	err := db.DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE user_id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
+	var user models.UserResponse
+	err := DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE user_id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -159,7 +167,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]UserResponse{
+	json.NewEncoder(w).Encode(map[string]models.UserResponse{
 		"data": user,
 	})
 }

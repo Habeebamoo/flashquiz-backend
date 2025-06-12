@@ -1,8 +1,7 @@
-package user
+package service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,28 +39,6 @@ func GenerateJWT(id string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("JWT_KEY")))
-}
-
-func (user User) Validate() error {
-	if user.Name == "" {
-		return errors.New("name is not defined")
-	} else if user.Email == "" {
-		return errors.New("email is not defined")
-	} else if user.Password == "" {
-		return errors.New("password is not defined")
-	} else {
-		return nil
-	}
-}
-
-func (user User) LoginValidate() error {
-	if user.Email == "" {
-		return errors.New("email is not defined")
-	} else if user.Password == "" {
-		return errors.New("password is not defined")
-	} else {
-		return nil
-	}
 }
 
 func ErrorResponse(w http.ResponseWriter, msg string) {

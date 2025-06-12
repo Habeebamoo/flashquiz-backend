@@ -2,8 +2,8 @@ package main
 
 import (
 	"flashquiz-server/internal/middlewares"
-	"flashquiz-server/internal/user"
-	"flashquiz-server/pkg/db"
+	"flashquiz-server/internal/handlers"
+	"flashquiz-server/internal/database"
 	"log"
 	"net/http"
 	"os"
@@ -13,18 +13,18 @@ import (
 )
 
 func main() {
-	err := db.InitDB()
+	err := database.Initialize()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.DB.Close()
+	defer database.DB.Close()
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("/api", user.Welcome)
-	router.HandleFunc("/api/register", user.Register)
-	router.HandleFunc("/api/login", user.Login)
-	router.HandleFunc("/api/user", user.UserHandler)
+	router.HandleFunc("/api", handlers.Welcome)
+	router.HandleFunc("/api/register", handlers.Register)
+	router.HandleFunc("/api/login", handlers.Login)
+	router.HandleFunc("/api/user", handlers.UserHandler)
 
 	handler := middlewares.CORS(middlewares.Recovery(middlewares.AuthMiddleware(router)))
 
