@@ -75,7 +75,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return		
 	}
 
-	_, err = DB.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", u.Name, u.Email, hashedPassword)
+	var userId string
+
+	err = DB.QueryRow("INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING user_id", u.Name, u.Email, hashedPassword).Scan(&userId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -85,6 +87,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	token, err := service.GenerateToken()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	_, err = DB.Exec("INSERT INTO tokens (user_id, token, expires_at) VALUES ($1, $2, $3)", userId, token, time.Now().Add(24*time.Hour))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return		
 	}
 
 	go service.SendVerification(u.Email, u.Name, token)
@@ -103,7 +112,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var u models.User
+	u := &models.User{}
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -119,12 +128,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	if err := DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusNotFound)
 			ErrorResponse(w, "User not found")
 			return
 		}
-		ErrorResponse(w, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
 		return
 	}
 
