@@ -7,7 +7,9 @@ import (
 	"flashquiz-server/internal/middlewares"
 	"flashquiz-server/internal/models"
 	"flashquiz-server/internal/service"
+	"log"
 	"net/http"
+	"time"
 )
 
 var (
@@ -80,16 +82,21 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return		
 	}
 
-	go service.SendVerification(u.Email, u.Name)
+	token, err := service.GenerateToken()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go service.SendVerification(u.Email, u.Name, token)
 
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "User registered successfully",
 	})
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		ErrorResponse(w, "Method Not Allowed")
@@ -136,7 +143,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"token": token,
 		"message": "Login Successful",
@@ -144,6 +150,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		ErrorResponse(w, "Method Not Allowed")
@@ -165,9 +172,69 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]models.UserResponse{
 		"data": user,
+	})
+}
+
+func VerifyUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		ErrorResponse(w, "Method Not Allowed")
+		return
+	}
+
+	//extract token
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse(w, "Token is required")
+		return
+	}
+
+	var userId string
+	var expiresAt time.Time
+
+	//Checks for the token associated with the user
+	err := DB.QueryRow("SELECT user_id, expires_at FROM tokens WHERE token = $1", token).Scan(&userId, &expiresAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusBadRequest)
+			ErrorResponse(w, "Invalid Token")
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	//checks the expiriry
+	if time.Now().After(expiresAt) {
+		w.WriteHeader(http.StatusRequestTimeout)
+		ErrorResponse(w, "Token is Expired")
+		return
+	}
+
+	//verify the user email
+	_, err = DB.Exec("UPDATE users SET isVerified = TRUE WHERE user_id = $1", userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	//delete the token
+	_, err = DB.Exec("DELETE FROM tokens WHERE user_id = $1", userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Email Verification Successful",
 	})
 }

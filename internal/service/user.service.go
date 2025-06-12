@@ -1,6 +1,8 @@
 package service
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -27,6 +29,15 @@ func Verify(hashedPassword, password string) error {
 	return nil
 }
 
+func GenerateToken() (string, error) {
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 func GenerateJWT(id string) (string, error) {
 	claims := jwt.MapClaims{
 		"userId": id,
@@ -47,7 +58,7 @@ func ErrorResponse(w http.ResponseWriter, msg string) {
 	})
 }
 
-func SendVerification(userEmail, userName string) error {
+func SendVerification(userEmail, userName, token string) error {
 	m := gomail.NewMessage()
 
 	m.SetHeader("From", "habeebamoo08@gmail.com")
@@ -64,7 +75,7 @@ func SendVerification(userEmail, userName string) error {
 
 				<p>To complete your registration and activate your account, please confirm your email address by clicking the button below:</p>
 
-				<p><a href="%s" style="color: white; background-color: #1a73e8; padding: 20px; display: block; text-align: center; font-weight: bold; font-size: 1.2em;">Verify My Email</a></p>
+				<p><a href="https://flashquizweb.netlify.app/verify?token=%s" style="color: white; background-color: #1a73e8; padding: 20px; display: block; text-align: center; font-weight: bold; font-size: 1.2em;">Verify My Email</a></p>
 
 				<p>This verification grants you access to all our website features and quizzes, it also helps us secure your account and ensure only you have access to it.</p>
 
@@ -76,7 +87,7 @@ func SendVerification(userEmail, userName string) error {
 				<p>Best regards,<br>FlashQuiz Team</p>
 			</body>
 		</html>
-	`, userName, "https://flashquizweb.netlify.app")
+	`, userName, token)
 
 	m.SetBody("text/html", body)
 

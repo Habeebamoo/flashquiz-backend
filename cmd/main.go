@@ -25,6 +25,7 @@ func main() {
 	router.HandleFunc("/api/register", handlers.Register)
 	router.HandleFunc("/api/login", handlers.Login)
 	router.HandleFunc("/api/user", handlers.UserHandler)
+	router.HandleFunc("/api/verify", handlers.VerifyUser)
 
 	handler := middlewares.CORS(middlewares.Recovery(middlewares.AuthMiddleware(router)))
 
