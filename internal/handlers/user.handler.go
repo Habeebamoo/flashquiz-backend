@@ -124,7 +124,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			ErrorResponse(w, "User not found")
 			return
 		}
-		ErrorResponse(w, "Internal Server Error")
+		ErrorResponse(w, err.Error())
 		return
 	}
 
