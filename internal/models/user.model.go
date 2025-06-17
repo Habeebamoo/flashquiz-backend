@@ -18,7 +18,7 @@ type UserResponse struct {
 	IsVerified  bool  `json:"isVerified"`
 }
 
-func (user User) Validate() error {
+func (user *User) Validate() error {
 	if user.Name == "" {
 		return errors.New("name is not defined")
 	} else if user.Email == "" {
@@ -30,7 +30,7 @@ func (user User) Validate() error {
 	}
 }
 
-func (user User) LoginValidate() error {
+func (user *User) LoginValidate() error {
 	if user.Email == "" {
 		return errors.New("email is not defined")
 	} else if user.Password == "" {

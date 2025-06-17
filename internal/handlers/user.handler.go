@@ -15,7 +15,6 @@ import (
 var (
 	ErrorResponse = service.ErrorResponse
 	Hash = service.Hash
-	DB = database.DB
 )
 
 func Welcome(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +55,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userExists bool
-	if err := DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
+	if err := database.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)", u.Email).Scan(&userExists); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
 		return
@@ -77,7 +76,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	var userId string
 
-	err = DB.QueryRow("INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING user_id", u.Name, u.Email, hashedPassword).Scan(&userId)
+	err = database.DB.QueryRow("INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING user_id", u.Name, u.Email, hashedPassword).Scan(&userId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -89,7 +88,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	_, err = DB.Exec("INSERT INTO tokens (user_id, token, expires_at) VALUES ($1, $2, $3)", userId, token, time.Now().Add(24*time.Hour))
+	_, err = database.DB.Exec("INSERT INTO tokens (user_id, token, expires_at) VALUES ($1, $2, $3)", userId, token, time.Now().Add(24*time.Hour))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -127,7 +126,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	if err := DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
+	if err := database.DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
 			ErrorResponse(w, "User not found")
@@ -175,7 +174,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.UserResponse
-	err := DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE user_id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
+	err := database.DB.QueryRow("SELECT user_id, name, email, isVerified FROM users WHERE user_id = $1", userId).Scan(&user.UserId, &user.Name, &user.Email, &user.IsVerified)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -208,7 +207,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	var expiresAt time.Time
 
 	//Checks for the token associated with the user
-	err := DB.QueryRow("SELECT user_id, expires_at FROM tokens WHERE token = $1", token).Scan(&userId, &expiresAt)
+	err := database.DB.QueryRow("SELECT user_id, expires_at FROM tokens WHERE token = $1", token).Scan(&userId, &expiresAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusBadRequest)
@@ -228,7 +227,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//verify the user email
-	_, err = DB.Exec("UPDATE users SET isVerified = TRUE WHERE user_id = $1", userId)
+	_, err = database.DB.Exec("UPDATE users SET isVerified = TRUE WHERE user_id = $1", userId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")
@@ -236,7 +235,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//delete the token
-	_, err = DB.Exec("DELETE FROM tokens WHERE user_id = $1", userId)
+	_, err = database.DB.Exec("DELETE FROM tokens WHERE user_id = $1", userId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ErrorResponse(w, "Internal Server Error")

@@ -3,7 +3,6 @@ package middlewares
 import (
 	"log"
 	"net/http"
-	"runtime/debug"
 )
 
 func Recovery(next http.Handler) http.Handler {
@@ -11,7 +10,6 @@ func Recovery(next http.Handler) http.Handler {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Println("Recovered from panic", r)
-				debug.PrintStack()
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
