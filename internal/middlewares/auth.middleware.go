@@ -36,7 +36,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		tokenStrings := strings.TrimPrefix(authHeader, "Bearer")
 		tokenStr := strings.TrimSpace(tokenStrings)
 
-		if err := godotenv.Load("../.env"); err != nil {
+		if err := godotenv.Load(); err != nil {
 			log.Println("No .env file, ok in prod")
 		}
 
