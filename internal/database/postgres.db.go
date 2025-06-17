@@ -14,7 +14,7 @@ var DB *sql.DB
 func Initialize() error {
 	var err error
 
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Println("No .env file, ok in prod")
 	}
 

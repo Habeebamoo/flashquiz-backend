@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -28,6 +29,10 @@ func main() {
 	router.HandleFunc("/api/verify", handlers.VerifyUser)
 
 	handler := middlewares.CORS(middlewares.Recovery(middlewares.AuthMiddleware(router)))
+
+	if err := godotenv.Load("../.env"); err != nil {
+		log.Println("No .env file, ok in prod")
+	}
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

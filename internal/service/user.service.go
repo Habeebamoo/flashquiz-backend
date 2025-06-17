@@ -44,7 +44,7 @@ func GenerateJWT(id string) (string, error) {
 		"exp": time.Now().Add(24*time.Hour).Unix(),
 	}
 
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Println("no .env file, ok in prod")
 	}
 
@@ -91,7 +91,7 @@ func SendVerification(userEmail, userName, token string) error {
 
 	m.SetBody("text/html", body)
 
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Println("no .env file, ok in prod")
 	}
 

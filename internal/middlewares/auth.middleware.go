@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"log"
 	"os"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 )
 
 type contextKey string
@@ -33,6 +35,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		tokenStrings := strings.TrimPrefix(authHeader, "Bearer")
 		tokenStr := strings.TrimSpace(tokenStrings)
+
+		if err := godotenv.Load("../.env"); err != nil {
+			log.Println("No .env file, ok in prod")
+		}
 
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
