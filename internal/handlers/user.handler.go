@@ -99,7 +99,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "User registered successfully",
+		"message": "Account Created",
 	})
 }
 
@@ -121,7 +121,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if err := u.LoginValidate(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		ErrorResponse(w, "Email and password must be provided")
+		ErrorResponse(w, err.Error())
 		return
 	}
 
@@ -129,7 +129,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err := database.DB.QueryRow("SELECT user_id, password FROM users WHERE email = $1", u.Email).Scan(&user.UserId, &user.Password); err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
-			ErrorResponse(w, "User not found")
+			ErrorResponse(w, "User Not Found")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -147,7 +147,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	token, err := service.GenerateJWT(user.UserId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		ErrorResponse(w, "Failed to generate jwt")
+		ErrorResponse(w, "Internal Server Error")
 		return
 	}
 
@@ -199,7 +199,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
 	if token == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		ErrorResponse(w, "Token is required")
+		ErrorResponse(w, "Token Missing")
 		return
 	}
 
@@ -222,7 +222,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	//checks the expiriry
 	if time.Now().After(expiresAt) {
 		w.WriteHeader(http.StatusRequestTimeout)
-		ErrorResponse(w, "Token is Expired")
+		ErrorResponse(w, "Expired Token")
 		return
 	}
 
