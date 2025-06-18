@@ -247,3 +247,70 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 		"message": "Email Verification Successful",
 	})
 }
+
+func ResetPassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "PUT" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		ErrorResponse(w, "Method Not Allowed")
+		return
+	}
+
+	//extract token
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse(w, "Token Missing")
+		return
+	}
+
+	var userId string
+	
+	//Checks for the token associated with the user
+	err := database.DB.QueryRow("SELECT user_id FROM reset_tokens WHERE token = $1", token).Scan(&userId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusBadRequest)
+			ErrorResponse(w, "Invalid Token")
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	//decodes and validates the form password
+	form := &models.ResetForm{}
+	if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	if err := form.Validate(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse(w, err.Error())
+		return
+	}
+
+	//update the users password
+	newHashedPassword, _ := Hash(form.Password)
+	_, err = database.DB.Exec("UPDATE users SET password = $1 WHERE user_id = $2",  newHashedPassword, userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+	}
+
+	//delete the token
+	_, err = database.DB.Exec("DELETE FROM reset_tokens WHERE user_id = $1", userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ErrorResponse(w, "Internal Server Error")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Password Updated Successfully",
+	})
+}
